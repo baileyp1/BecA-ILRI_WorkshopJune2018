@@ -1,4 +1,4 @@
-### Practical 4: Variant Calling with RNA-Seq from Arabidopsis Accessions
+### Practical 5: Variant Calling with RNA-Seq from Arabidopsis Accessions
 
 
 **Background to the original study**

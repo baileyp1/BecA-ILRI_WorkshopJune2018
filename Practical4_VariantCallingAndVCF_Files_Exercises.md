@@ -1,4 +1,4 @@
-### Practical 3: An Exercise in Variant Calling and Interpreting VCF Files
+### Practical 4: An Exercise in Variant Calling and Interpreting VCF Files
 
 
 **Objectives**
