@@ -16,6 +16,7 @@
 * Learn some criteria for filtering  VCF files
 
 <br>
+
 **Step 1 - Remove duplicate reads from the bamfiles with Samtools**
 
 * [Samtools manual](http://www.htslib.org/doc/samtools.html)
@@ -32,6 +33,7 @@
 * bam files for Azhurnaya: &nbsp;119B &nbsp;and &nbsp;120A &nbsp;(two replicate samples
 
 <br>
+
 **Package to load**
 
 ```sh
