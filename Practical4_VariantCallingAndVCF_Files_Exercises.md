@@ -21,7 +21,7 @@
 
 * [Samtools manual](http://www.htslib.org/doc/samtools.html)
 
-* [SAM format rules] (https://samtools.github.io/hts-specs/SAMv1.pdf)
+* [SAM format rules](https://samtools.github.io/hts-specs/SAMv1.pdf)
 
 
 **Inputs**
@@ -31,6 +31,8 @@
 * bam files for Chinese Spring:&nbsp; DF5 &nbsp;and &nbsp;DF19&nbsp; (two replicate samples)
 
 * bam files for Azhurnaya: &nbsp;119B &nbsp;and &nbsp;120A &nbsp;(two replicate samples
+
+* Create a working directory for the practical
 
 <br>
 
@@ -47,7 +49,7 @@ module load samtools/1.8
 ```sh
 samtools sort -n -o CS_DF5_st_namesort.bam /var/scratch/baileyp/Practical_4_small_wheat_dataset/sorted_bam_from_HISAT2_mapping/sorted_DF5_P.bam
 ```
-* Add ms and MC tags to the bam records (used by the markdup command):
+* Add MC and ms tags to the bam records (used by the markdup command):
 
 ```sh
 samtools fixmate -m CS_DF5_st_namesort.bam CS_DF5_st_fixmate.bam
@@ -98,6 +100,7 @@ samtools fixmate -m ${samplePrefix}_st_namesort.bam ${samplePrefix}_st_fixmate.b
 ```
 <br>
 <br>
+
 **Step 2 - Merge the bam files and add read group information**
 
 * Merge the bamfiles for all samples. The -r flag attaches an identifier (read group) to the bam record, based on the file name:
@@ -177,6 +180,7 @@ samtools  index  merged_readgroups.bam
 	/var/scratch/baileyp/Practical_1_RicardosExample/References/transformed_coordinates.fasta
 	
 <br>
+
 **Package to load**
 
 ```sh
@@ -251,16 +255,30 @@ freebayes -h | more
 module load vcftools/0.1.15
 ```
 
-* SNP filtering here;
-
 * We will filter the SNPs on the following basic criteria (vcftools flags in brackets):
-	* minimum quality (--minQ)
-	* depth for individual sample (--minDP)
+	* minimum quality (--minQ)	20
+	* depth for an individual sample (--minDP)	6
 	* remove indels (--remove-indels)
-	
-	
+	* allow no missing genotypes (max-missing 1)
+
+* Add these flags to the command below, one after the other and keep a record of the number of SNPs you find after adding each additional filter. Also alter the output filenames accordingly.
 
 
+```sh
+vcftools --vcf all_snps.vcf \
+[ add your filters here ]
+
+```
+
+* Try also adding these parameters to obtain the calculations for the transition (Ts)/tranversion ratio (Tv):
+--TsTv-summary
+--TsTv-by-count
+
+* You will probably get an error but it's very simple to correct.
+
+* Is the ratio Ts/Tv as you would expect or too high, too low?
+
+* Finally, print out the filtered SNPs to a file. You need to add the recode flag(s) before a filtered vcf file will be produced.
 
 ```sh
 vcftools --vcf merged_readgroups.vcf \
@@ -272,68 +290,24 @@ vcftools --vcf merged_readgroups.vcf \
 --out all_minQ20_minDP6_noindels_maxm1
 ```
 
---TsTv-summary \
---TsTv-by-count \
---het \
+* Try adding up the values you find in the INFO and FORMAT fields and see whether they add up to a field that represents the total for the number of alleles or depth. Examples to try:
 
-
-```sh
-vcftools --vcf merged_readgroups.vcf \
---minQ 20 \
---minDP 6 \
---remove-indels \
---max-missing 1 \
---TsTv-summary \
---TsTv-by-count \
---het
-```
-
-* Try adding up the values you find in the INFO and FORMAT fields and see whether they add up to a field that represents the total for the number of alleles or depth. Exampels to try:
-
-* What do the --recode flags do?
-
-	 
-
-Gets SNPs with no genotype call in a sample:  column $10 -$14 onwards
-more merged_readgroups_with_bam_indx.vcf | grep -v '#' | awk '$10 == "." {print $10}' | wc -l
-
-
-
-**View SNPs with the IGV**
-https://software.broadinstitute.org/software/igv/	(needs java8 installed)
- https://software.broadinstitute.org/software/igv/UserGuide
-
-
-
+<br>
 
 **List of tools you could also use to carry some of the above tasks**
 
-For marking duplicates:
-Picard rmdup program
+* For marking duplicates: [Picard](https://broadinstitute.github.io/picard/) MarkDuplicates program
 
-Other SNP callers:
-GATK - this is also a proper haplotype caller like FreeBayes but FreeBayes is easier to use
-index of programs availble:
-Using GATK is a 2 step process
-Index of GATK programs
-https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/index
-For Calling germlone SNPs you woudl use  HaplotypeCaller followed by GenotypeGVCFs 
+* Other SNP callers:
+	* GATK - another haplotype caller like FreeBayes (but FreeBayes is easier to use)
+	* [Index of GATK programs](https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/index) (see under Variant Discovery tools)
+	* Using GATK is a 2 step process. For Calling germline SNPs you would use HaplotypeCaller followed by GenotypeGVCFs
+	* [Samtools](http://samtools.sourceforge.net/mpileup.shtml)
 
-https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php
-
- 
-Samttools - summarize command you would use
-http://samtools.sourceforge.net/mpileup.shtml
-correct page?
-
-Other VCF filtering tools (have at the end) of the filtering section
-bcftools 
-http://snpeff.sourceforge.net/SnpSift.html
-There are others!
-
-Counting reads in bamfiles
-
-
+* Other VCF filtering tools:
+	* bcftools
+	* [SnpSift](http://snpeff.sourceforge.net/SnpSift.html)
+	* [VEP](https://www.ensembl.org/info/docs/tools/vep/script/vep_filter.html)
 
 
 <br>
@@ -341,6 +315,9 @@ Counting reads in bamfiles
 <br>
 <br>
 **Answers to the questions**
+
+
+
 
 Question: How else could read group info be added to the samples?
 Read groups can be added when setting up many read aligners e.g. BWA mem - go to the manual and look at the mem command and the -R option. ([BWA manual](http://bio-bwa.sourceforge.net/bwa.shtml))

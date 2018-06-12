@@ -33,13 +33,14 @@
  (78 base pair reads)
 
 * Location of the Arabidopsis genome reference and GTF file:
-	/var/scratch/baileyp/Practical\_2\_Arabidopsis_accns/genome\_reference
+	/var/scratch/baileyp/Practical\_5\_Arabidopsis_accns/genome\_reference
 
 * Reference: Arabidopsis_thaliana.TAIR10.dna.toplevel.fa
 
 * GTF file: Arabidopsis_thaliana.TAIR10.39.gtf
 
 <br>
+
 **Packages to load**
 
 ```sh
@@ -71,6 +72,7 @@ STAR --runThreadN 1 \
 ```
 
 <br>
+
 **Step 2 - Prepare the reads for aligning to the  reference**
 
 * **Note:** The FreeBayes SNP caller requires that the Phred sequence quality scores are Phred+33 but in this data set these reads were processed with the Illumnina v1.6 pipeline which outputs reads with Phred+64 scores.
@@ -111,6 +113,7 @@ MINLEN:36 \
 * The output file is a compressed file with name ending ".fq.gz" which can be used as input to the STAR aligner.
 
 <br>
+
 **Step 3 - Align prepared reads to the reference with STAR**
 
 * Align separately the trimmed Col\_0, then Ler\_0 reads to the Arabidopsis genome reference: 
@@ -130,6 +133,7 @@ STAR --runThreadN 4 \
 * **Note:** We need to insert the read group information into the bam file for FreeBayes. It can be added as part of the STAR command using the outSAMattrRGline flag. It avoids having to add it manually afterwards, as we did for Practical 1.
 
 <br>
+
 **Step 4 - Remove duplicate reads from the bamfiles**
 
 * It is important to remove duplicate reads before calling SNPs. We will use Samtools to do this step. It is a four step process and uses exactly the same commands used in the same steps in Practical 1.
@@ -160,9 +164,10 @@ samtools markdup -s -r *_st_positionsort.bam  *_st_rmdup.bam
 * **Question:** From the output printed to the screen, what is the percent of duplicate reads?
 
 <br>
+
 **Step 5 - Merge the bam files**
 
-* Merge the bam files for both samples. This time we do not need to use the -r flag to attach the read group information because it has already been added:
+* Merge the bam files for both samples. For this practical, we do not need to use the -r flag to attach the read group information because it has already been added:
 
 ```sh
 samtools merge -f merged.bam Col_0_st_rmdup.bam Ler_0_st_rmdup.bam
@@ -182,6 +187,7 @@ samtools  index  Col_0_Ler_0_merged.bam
 ```
 
 <br>
+
 **Step 6 - Call SNPs with FreeBayes**
 
 * Now we are ready to call SNPs. Calling SNPs on the whole genome takes quite a long time but we can restrict the analysis a particular chromosome arm with the -r flag. We are interested in chromosome 4:
@@ -194,45 +200,53 @@ Col_0_Ler_0_merged.bam \
 -r 4 \
 > merged_chr4_ONLY.vcf &
 ```
-
 <!--At1G64970 - the SNP is in an intron!!!!-->
+
 <br>
-**Step 7 - Annotate snpEFF Annotation**
+
+**Step 7 - Filter the chromosome 4 SNP calls**
+
+* We will filter exactly as for the previous practical:
+
+```sh
+module load vcftools/0.1.15
+vcftools --vcf merged_chr4_ONLY.vcf \
+--recode --recode-INFO-all \
+--minQ 20 \
+--minDP 6 \
+--remove-indels \
+--max-missing 1 \
+--out chr4_ONLY_minQ20_minDP6_noindels_maxm1
+```
+
+<br>
+
+**Step 8 - Annotate snpEFF Annotation**
 
 * [The snpEff Manual](http://snpeff.sourceforge.net/SnpEff_manual.html)
 
-<br>
-<br>
-**UPTOHERE10.7.2018**
-
-http://snpeff.sourceforge.net/SnpSift.html
-Mention the config file - get them to prepare it??
-
+* There are programs to annotate SNPs according to whether the SNP falls within a gene to produce a deleterious mutation e.g. stop codon or potentially a non-synomymous substitution. We will use the snpEff tool:
 
 ```sh
 module load snpeff/4.1g
 snpEff \
--c /var/scratch/baileyp/Practical_2_Arabidopsis_accns/snpEff/snpEff.config \
+-c /var/scratch/baileyp/Practical_5_Arabidopsis_accns/snpEff/snpEff.config \
 athalianaTair10 \
-merged_temp.vcf
+chr4_ONLY_minQ20_minDP6_noindels_maxm1.recode.vcf \
+> chr4_ONLY_filtered_snpeff.vcf
 ```
 
-* need to rename the snpEff_summary.html and snpEff_genes.txt files before running snpEff agsain to avoid over-writing the previous files.
+* The output comes with a summary html file containing information on the number of genes with SNP effects or consequences.
 
-* The SNP doesn't exist. In fact there are no mutations in the coding region only upstream and donwstream SNPs
+* A complete list of consequences can be found at Ensembl [here] (https://www.ensembl.org/info/genome/variation/predicted_data.html#consequences).
 
-* Get them to look at the effects/consequences:
-* https://www.ensembl.org/info/genome/variation/predicted_data.html#consequences 
+* How would you quickly count the number of stop codons and non-synomymous substitutions effects in the new snpeff.vcf file. How many of each are there?
+It is better to use a filter tool howeever e.g. snpSift (see via the snpEff manual above)
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+* Another SNP effect annotation tool to look at is the  
+the Ensembl [Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) which also has its own [filtering tool](https://www.ensembl.org/info/docs/tools/vep/script/vep_filter.html).
 
-
-At the end, have list of tools you could also use
-
-* VEP - https://www.ensembl.org/info/docs/tools/vep/script/vep_filter.html
-
-
-**Answers to the questions**
+<!-- **Answers to the questions** -->
 
 
 
